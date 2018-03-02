@@ -1,13 +1,20 @@
+//go:generate godoc2md -o README.md .
+
 // Copyright 2009 The Go Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// godoc2md converts godoc formatted package documentation into Markdown format.
-//
+// Package godoc2md converts godoc formatted package documentation into Markdown format.
 //
 // Usage
+// godoc2cmd can be used from commandline or as a go:generate build tag.
 //
+// Commandline
 //    godoc2md $PACKAGE > $GOPATH/src/$PACKAGE/README.md
+//
+// Build Tag
+//    //go:generate godoc2md -o README.md
+//
 package main
 
 import (
@@ -51,8 +58,7 @@ var (
 )
 
 func usage() {
-	fmt.Fprintf(os.Stderr,
-		"usage: godoc2md package [name ...]\n")
+	fmt.Fprintf(os.Stderr, "usage: godoc2md [options] package [name ...]\n")
 	flag.PrintDefaults()
 	os.Exit(2)
 }
@@ -190,7 +196,33 @@ func main() {
 		defer of.Close()
 	}
 
-	if err := godoc.CommandLine(of, fs, pres, flag.Args()); err != nil {
+	// Convert . (dot) packages
+
+	var pkgs []string
+	for _, arg := range flag.Args() {
+		if arg == "." {
+			// Convert current directory
+			dir, err := filepath.Abs(arg)
+			if err != nil {
+				log.Fatal(err)
+			}
+			fmt.Println(dir)
+			for _, p := range filepath.SplitList(build.Default.GOPATH) {
+				if strings.HasPrefix(dir, filepath.Join(p, "src")) {
+					pkg := strings.TrimPrefix(dir, filepath.Join(p, "src"))[1:]
+					pkg = strings.Replace(pkg, "\\", "/", -1)
+					pkgs = append(pkgs, pkg)
+				}
+			}
+
+			continue
+		}
+
+		// Not dotted package name, add it.
+		pkgs = append(pkgs, arg)
+	}
+
+	if err := godoc.CommandLine(of, fs, pres, pkgs); err != nil {
 		log.Print(err)
 	}
 }
