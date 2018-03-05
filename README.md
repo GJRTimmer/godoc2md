@@ -14,7 +14,7 @@ Commandline
 Build Tag
 
 
-	//go:generate godoc2md -o README.md
+	//go:generate godoc2md -o README.md .
 
 
 
