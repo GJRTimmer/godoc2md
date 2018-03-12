@@ -13,7 +13,7 @@
 //    godoc2md $PACKAGE > $GOPATH/src/$PACKAGE/README.md
 //
 // Build Tag
-//    //go:generate godoc2md -o README.md
+//    //go:generate godoc2md -o README.md .
 //
 package main
 
